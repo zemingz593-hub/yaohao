@@ -2,13 +2,13 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>年会抽奖系统 · 终极版</title>
+<title>彩票摇号系统</title>
 
 <style>
 body {
   margin: 0;
-  background: radial-gradient(circle at top, #102027, #000);
-  font-family: "Segoe UI", Arial, sans-serif;
+  background: radial-gradient(circle at top, #0f2027, #000);
+  font-family: Arial, sans-serif;
   color: #fff;
   height: 100vh;
   display: flex;
@@ -17,232 +17,136 @@ body {
 }
 
 .container {
-  width: 600px;
-  background: linear-gradient(180deg, #1c313a, #000);
-  border-radius: 20px;
-  padding: 30px;
-  box-shadow: 0 35px 70px rgba(0,0,0,0.85);
-}
-
-h2 {
+  width: 620px;
   text-align: center;
-  margin: 0 0 10px;
-  letter-spacing: 2px;
 }
 
-.lock {
-  text-align: center;
-  color: #ff5252;
-  font-weight: bold;
-  margin-bottom: 10px;
+h1 {
+  margin-bottom: 20px;
+  letter-spacing: 3px;
 }
 
-label {
-  display: block;
-  margin-top: 15px;
-  font-weight: bold;
-}
-
-textarea, input {
-  width: 100%;
-  margin-top: 6px;
-  padding: 10px;
-  border-radius: 6px;
-  border: none;
-  font-size: 14px;
-}
-
-button {
-  width: 100%;
-  margin-top: 15px;
-  padding: 14px;
-  font-size: 16px;
-  font-weight: bold;
-  border-radius: 12px;
-  border: none;
-  cursor: pointer;
-}
-
-.start {
-  background: linear-gradient(90deg, #ff1744, #ff9100);
-  color: #fff;
-}
-
-.start:disabled { opacity: 0.4; }
-
-.reset {
-  background: #263238;
-  color: #ccc;
-}
-
-/* 🎰 彩票机主体 */
+/* 🎱 摇奖机 */
 .machine {
-  margin: 30px auto;
-  width: 420px;
-  height: 210px;
-  border-radius: 140px;
-  background: radial-gradient(circle at 30% 30%, #ffffff, #90a4ae);
-  box-shadow:
-    inset -18px -18px 35px rgba(0,0,0,0.45),
-    inset 18px 18px 35px rgba(255,255,255,0.6),
-    0 30px 60px rgba(0,0,0,0.9);
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
+  width: 320px;
+  height: 320px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6), rgba(255,255,255,0.15));
+  border: 8px solid rgba(255,255,255,0.4);
+  box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+  position: relative;
+  overflow: hidden;
 }
 
-/* 单个窗口 */
-.window {
-  width: 80px;
-  height: 70px;
-  background: #000;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: inset 0 0 12px rgba(0,0,0,0.9);
+/* 内部滚动球 */
+.ball {
+  position: absolute;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: radial-gradient(circle at top left, #fff, #ff5252);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: bold;
+  color: #000;
+  animation: bounce 0.6s infinite alternate;
 }
 
-.reel {
+@keyframes bounce {
+  0% { transform: translate(20px, 20px); }
+  100% { transform: translate(240px, 240px); }
+}
+
+/* 开奖区 */
+.results {
+  margin-top: 25px;
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.result-ball {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: radial-gradient(circle at top left, #fff, #ff1744);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 22px;
   font-weight: bold;
-  color: #ff5252;
+  color: #000;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.6);
 }
 
-.spin {
-  animation: spin 0.08s linear infinite;
-}
-
-@keyframes spin {
-  0%   { transform: translateY(0); }
-  100% { transform: translateY(-22px); }
-}
-
-.result {
-  margin-top: 20px;
-  background: rgba(255,255,255,0.12);
-  border-radius: 12px;
-  padding: 18px;
-  text-align: center;
-  font-size: 20px;
-}
-
-.admin {
-  margin-top: 20px;
-  border-top: 1px dashed rgba(255,255,255,0.35);
-  padding-top: 15px;
+button {
+  margin-top: 30px;
+  padding: 14px 30px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 30px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(90deg, #ff1744, #ff9100);
+  color: #fff;
 }
 </style>
 </head>
 
 <body>
 <div class="container">
-  <h2>🎰 年会抽奖系统</h2>
-  <div class="lock" id="lockTip">🔒 管理员未解锁</div>
+  <h1>🎱 彩票摇号</h1>
 
-  <label>参与名单（每行一个）</label>
-  <textarea id="list" rows="4"></textarea>
+  <div class="machine" id="machine"></div>
 
-  <label>
-    <input type="checkbox" id="repeat" checked>
-    允许同一人再次参与下一轮
-  </label>
+  <div class="results" id="results"></div>
 
-  <button class="start" id="startBtn" onclick="draw()" disabled>开始抽奖</button>
-  <button class="reset" id="resetBtn" onclick="reset()" disabled>重置</button>
-
-  <!-- 🎰 四窗口彩票机 -->
-  <div class="machine">
-    <div class="window"><div class="reel" id="reel1">---</div></div>
-    <div class="window"><div class="reel" id="reel2">---</div></div>
-    <div class="window"><div class="reel" id="reel3">---</div></div>
-    <div class="window"><div class="reel" id="reel4">---</div></div>
-  </div>
-
-  <div class="result" id="result"></div>
-
-  <div class="admin">
-    <label>管理员密码</label>
-    <input type="password" id="adminPwd" placeholder="请输入管理员密码">
-    <button onclick="unlock()">解锁管理员</button>
-  </div>
+  <button onclick="startDraw()">开始摇号</button>
 </div>
 
 <script>
-/* =========================
-   🎯 核心抽奖规则（终极）
-   ========================= */
-const ADMIN_PASSWORD = "123";
-const WIN_COUNT_PER_PERSON = 4; // ←【规则写死：一人中 4 个】
+const TOTAL_BALLS = 49;   // 号码范围：1 - 49
+const DRAW_COUNT = 4;    // ✅ 只中 4 个号码
 
-let history = [];
+function startDraw() {
+  const machine = document.getElementById("machine");
+  const results = document.getElementById("results");
 
-function unlock() {
-  if (adminPwd.value === ADMIN_PASSWORD) {
-    startBtn.disabled = false;
-    resetBtn.disabled = false;
-    lockTip.innerText = "✅ 管理员已解锁";
-    lockTip.style.color = "#00e676";
-  } else {
-    alert("管理员密码错误");
+  machine.innerHTML = "";
+  results.innerHTML = "";
+
+  // 生成滚动球
+  for (let i = 0; i < 10; i++) {
+    const b = document.createElement("div");
+    b.className = "ball";
+    b.innerText = Math.floor(Math.random() * TOTAL_BALLS) + 1;
+    b.style.top = Math.random() * 250 + "px";
+    b.style.left = Math.random() * 250 + "px";
+    machine.appendChild(b);
   }
-}
 
-function draw() {
-  const names = list.value.split("\n").map(n => n.trim()).filter(Boolean);
-  const repeat = document.getElementById("repeat").checked;
+  // 抽取号码（不重复）
+  let pool = Array.from({length: TOTAL_BALLS}, (_, i) => i + 1);
+  let winners = [];
 
-  if (!names.length) return alert("请输入名单");
+  for (let i = 0; i < DRAW_COUNT; i++) {
+    const idx = Math.floor(Math.random() * pool.length);
+    winners.push(pool[idx]);
+    pool.splice(idx, 1);
+  }
 
-  let pool = repeat ? [...names] : names.filter(n => !history.includes(n));
-  if (!pool.length) return alert("没有可抽取的人");
-
-  result.innerHTML = "";
-  drawOnePersonWithMultipleWins(pool, repeat);
-}
-
-function drawOnePersonWithMultipleWins(pool, repeat) {
-  const reels = [
-    reel1, reel2, reel3, reel4
-  ];
-
-  // 转轴启动
-  reels.forEach(r => r.classList.add("spin"));
-
-  let times = 0;
-  const rolling = setInterval(() => {
-    const temp = pool[Math.floor(Math.random() * pool.length)];
-    reels.forEach(r => r.innerText = temp);
-    times++;
-
-    if (times > 32) {
-      clearInterval(rolling);
-      reels.forEach(r => r.classList.remove("spin"));
-
-      // 🎯 正式抽 1 个人
-      const winner = pool[Math.floor(Math.random() * pool.length)];
-
-      // 🧾 明确规则：该人获得 4 个中奖名额
-      const winRecords = Array(WIN_COUNT_PER_PERSON).fill(winner);
-
-      // 🎰 四个窗口 = 四个名额
-      reels.forEach((r, i) => r.innerText = winRecords[i]);
-
-      // 🎉 结果区
-      result.innerHTML =
-        "🎉 本轮中奖结果 🎉<br>" +
-        winner + " × " + WIN_COUNT_PER_PERSON;
-
-      if (!repeat) history.push(winner);
-    }
-  }, 80);
-}
-
-function reset() {
-  history = [];
-  result.innerHTML = "";
-  [reel1, reel2, reel3, reel4].forEach(r => r.innerText = "---");
+  // 依次出球
+  winners.forEach((num, i) => {
+    setTimeout(() => {
+      const rb = document.createElement("div");
+      rb.className = "result-ball";
+      rb.innerText = num;
+      results.appendChild(rb);
+    }, (i + 1) * 900);
+  });
 }
 </script>
 </body>
