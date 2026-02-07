@@ -108,8 +108,11 @@ button {
 </div>
 
 <script>
-const TOTAL_BALLS = 49;   // 号码范围：1 - 49
-const DRAW_COUNT = 4;    // ✅ 只中 4 个号码
+/* =============================
+   🎯 固定 8 选 4（不重复）
+   ============================= */
+const NUMBER_POOL = [1,2,3,4,5,6,7,8]; // ← 固定 8 个号码
+const DRAW_COUNT = 4;                 // ← 只摇 4 个
 
 function startDraw() {
   const machine = document.getElementById("machine");
@@ -118,27 +121,28 @@ function startDraw() {
   machine.innerHTML = "";
   results.innerHTML = "";
 
-  // 生成滚动球
+  /* 机器里随机球（只是视觉效果） */
   for (let i = 0; i < 10; i++) {
     const b = document.createElement("div");
     b.className = "ball";
-    b.innerText = Math.floor(Math.random() * TOTAL_BALLS) + 1;
+    b.innerText = NUMBER_POOL[Math.floor(Math.random() * NUMBER_POOL.length)];
     b.style.top = Math.random() * 250 + "px";
     b.style.left = Math.random() * 250 + "px";
     machine.appendChild(b);
   }
 
-  // 抽取号码（不重复）
-  let pool = Array.from({length: TOTAL_BALLS}, (_, i) => i + 1);
-  let winners = [];
+  /* 🎰 正式摇号逻辑（不重复） */
+  let pool = [...NUMBER_POOL];
 
-  for (let i = 0; i < DRAW_COUNT; i++) {
-    const idx = Math.floor(Math.random() * pool.length);
-    winners.push(pool[idx]);
-    pool.splice(idx, 1);
+  // Fisher–Yates 洗牌
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
   }
 
-  // 依次出球
+  const winners = pool.slice(0, DRAW_COUNT);
+
+  /* 🎱 依次出球 */
   winners.forEach((num, i) => {
     setTimeout(() => {
       const rb = document.createElement("div");
