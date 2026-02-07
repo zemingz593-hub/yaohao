@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>网页在线摇号</title>
+  <style>
+    body { font-family: Arial; background:#f2f2f2; padding:30px }
+    textarea, input, button {
+      width:100%; margin-top:10px; padding:10px; font-size:14px;
+    }
+    button { background:#4CAF50; color:#fff; border:none; cursor:pointer }
+    .result { margin-top:20px; font-size:18px; color:#d32f2f }
+  </style>
+</head>
+<body>
+
+<h2>网页在线摇号</h2>
+
+<label>参与名单（每行一个）：</label>
+<textarea id="list" rows="6"></textarea>
+
+<label>抽取人数：</label>
+<input type="number" id="count" value="1" min="1">
+
+<label>
+  <input type="checkbox" id="repeat"> 允许重复中奖
+</label>
+
+<button onclick="draw()">开始摇号</button>
+<button onclick="reset()">重置</button>
+
+<div class="result" id="result"></div>
+
+<script>
+let history = [];
+
+function draw() {
+  const names = document.getElementById("list").value
+    .split("\n").map(n => n.trim()).filter(n => n);
+
+  const count = parseInt(document.getElementById("count").value);
+  const repeat = document.getElementById("repeat").checked;
+
+  if (!names.length) return alert("请输入名单");
+
+  let pool = repeat ? names : names.filter(n => !history.includes(n));
+  if (pool.length < count) return alert("人数不足");
+
+  let res = [];
+  for (let i = 0; i < count; i++) {
+    let idx = Math.floor(Math.random() * pool.length);
+    res.push(pool[idx]);
+    if (!repeat) {
+      history.push(pool[idx]);
+      pool.splice(idx,1);
+    }
+  }
+
+  document.getElementById("result").innerHTML =
+    "摇号结果：<br>" + res.join("<br>");
+}
+
+function reset() {
+  history = [];
+  document.getElementById("result").innerHTML = "";
+}
+</script>
+
+</body>
+</html>
