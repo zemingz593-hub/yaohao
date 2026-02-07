@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>年会抽奖系统（一次中四个）</title>
+<title>年会抽奖系统 · 终极版</title>
 
 <style>
 body {
@@ -17,22 +17,29 @@ body {
 }
 
 .container {
-  width: 560px;
+  width: 600px;
   background: linear-gradient(180deg, #1c313a, #000);
-  border-radius: 18px;
+  border-radius: 20px;
   padding: 30px;
-  box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+  box-shadow: 0 35px 70px rgba(0,0,0,0.85);
 }
 
 h2 {
   text-align: center;
-  margin-top: 0;
+  margin: 0 0 10px;
   letter-spacing: 2px;
 }
 
+.lock {
+  text-align: center;
+  color: #ff5252;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
 label {
-  margin-top: 15px;
   display: block;
+  margin-top: 15px;
   font-weight: bold;
 }
 
@@ -51,7 +58,7 @@ button {
   padding: 14px;
   font-size: 16px;
   font-weight: bold;
-  border-radius: 10px;
+  border-radius: 12px;
   border: none;
   cursor: pointer;
 }
@@ -70,28 +77,28 @@ button {
 
 /* 🎰 彩票机主体 */
 .machine {
-  margin: 25px auto;
-  width: 360px;
-  height: 200px;
-  border-radius: 120px;
+  margin: 30px auto;
+  width: 420px;
+  height: 210px;
+  border-radius: 140px;
   background: radial-gradient(circle at 30% 30%, #ffffff, #90a4ae);
   box-shadow:
-    inset -15px -15px 30px rgba(0,0,0,0.4),
-    inset 15px 15px 30px rgba(255,255,255,0.6),
-    0 25px 50px rgba(0,0,0,0.8);
+    inset -18px -18px 35px rgba(0,0,0,0.45),
+    inset 18px 18px 35px rgba(255,255,255,0.6),
+    0 30px 60px rgba(0,0,0,0.9);
   display: flex;
   align-items: center;
   justify-content: space-around;
 }
 
-/* 窗口 */
+/* 单个窗口 */
 .window {
-  width: 70px;
-  height: 60px;
+  width: 80px;
+  height: 70px;
   background: #000;
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+  box-shadow: inset 0 0 12px rgba(0,0,0,0.9);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -109,27 +116,21 @@ button {
 
 @keyframes spin {
   0%   { transform: translateY(0); }
-  100% { transform: translateY(-20px); }
+  100% { transform: translateY(-22px); }
 }
 
 .result {
-  margin-top: 15px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 10px;
-  padding: 15px;
+  margin-top: 20px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 12px;
+  padding: 18px;
   text-align: center;
   font-size: 20px;
 }
 
-.lock {
-  text-align: center;
-  color: #ff5252;
-  font-weight: bold;
-}
-
 .admin {
   margin-top: 20px;
-  border-top: 1px dashed rgba(255,255,255,0.3);
+  border-top: 1px dashed rgba(255,255,255,0.35);
   padding-top: 15px;
 }
 </style>
@@ -138,14 +139,14 @@ button {
 <body>
 <div class="container">
   <h2>🎰 年会抽奖系统</h2>
-
   <div class="lock" id="lockTip">🔒 管理员未解锁</div>
 
   <label>参与名单（每行一个）</label>
   <textarea id="list" rows="4"></textarea>
 
   <label>
-    <input type="checkbox" id="repeat" checked> 允许重复中奖
+    <input type="checkbox" id="repeat" checked>
+    允许同一人再次参与下一轮
   </label>
 
   <button class="start" id="startBtn" onclick="draw()" disabled>开始抽奖</button>
@@ -169,11 +170,16 @@ button {
 </div>
 
 <script>
-const ADMIN_PASSWORD = "123"; // ← 改这里
+/* =========================
+   🎯 核心抽奖规则（终极）
+   ========================= */
+const ADMIN_PASSWORD = "123";
+const WIN_COUNT_PER_PERSON = 4; // ←【规则写死：一人中 4 个】
+
 let history = [];
 
 function unlock() {
-  if (document.getElementById("adminPwd").value === ADMIN_PASSWORD) {
+  if (adminPwd.value === ADMIN_PASSWORD) {
     startBtn.disabled = false;
     resetBtn.disabled = false;
     lockTip.innerText = "✅ 管理员已解锁";
@@ -184,27 +190,24 @@ function unlock() {
 }
 
 function draw() {
-  const names = list.value.split("\n").map(n => n.trim()).filter(n => n);
+  const names = list.value.split("\n").map(n => n.trim()).filter(Boolean);
   const repeat = document.getElementById("repeat").checked;
 
   if (!names.length) return alert("请输入名单");
 
   let pool = repeat ? [...names] : names.filter(n => !history.includes(n));
-  if (!pool.length) return alert("人数不足");
+  if (!pool.length) return alert("没有可抽取的人");
 
   result.innerHTML = "";
-  drawOnePersonFour(pool, repeat);
+  drawOnePersonWithMultipleWins(pool, repeat);
 }
 
-function drawOnePersonFour(pool, repeat) {
+function drawOnePersonWithMultipleWins(pool, repeat) {
   const reels = [
-    document.getElementById("reel1"),
-    document.getElementById("reel2"),
-    document.getElementById("reel3"),
-    document.getElementById("reel4")
+    reel1, reel2, reel3, reel4
   ];
 
-  // 开始滚动
+  // 转轴启动
   reels.forEach(r => r.classList.add("spin"));
 
   let times = 0;
@@ -213,21 +216,23 @@ function drawOnePersonFour(pool, repeat) {
     reels.forEach(r => r.innerText = temp);
     times++;
 
-    if (times > 30) {
+    if (times > 32) {
       clearInterval(rolling);
       reels.forEach(r => r.classList.remove("spin"));
 
-      // 🎯 只抽一个人
-      const idx = Math.floor(Math.random() * pool.length);
-      const winner = pool[idx];
+      // 🎯 正式抽 1 个人
+      const winner = pool[Math.floor(Math.random() * pool.length)];
 
-      // 四个窗口全是他
-      reels.forEach(r => r.innerText = winner);
+      // 🧾 明确规则：该人获得 4 个中奖名额
+      const winRecords = Array(WIN_COUNT_PER_PERSON).fill(winner);
 
+      // 🎰 四个窗口 = 四个名额
+      reels.forEach((r, i) => r.innerText = winRecords[i]);
+
+      // 🎉 结果区
       result.innerHTML =
-        "🎉 本轮中奖者 🎉<br>" +
-        winner + "<br>" +
-        "（一次中 4 个）";
+        "🎉 本轮中奖结果 🎉<br>" +
+        winner + " × " + WIN_COUNT_PER_PERSON;
 
       if (!repeat) history.push(winner);
     }
@@ -237,9 +242,7 @@ function drawOnePersonFour(pool, repeat) {
 function reset() {
   history = [];
   result.innerHTML = "";
-  ["reel1","reel2","reel3","reel4"].forEach(id => {
-    document.getElementById(id).innerText = "---";
-  });
+  [reel1, reel2, reel3, reel4].forEach(r => r.innerText = "---");
 }
 </script>
 </body>
