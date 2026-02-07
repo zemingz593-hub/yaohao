@@ -1,114 +1,119 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8" />
-<title>🎰 彩票摇号机</title>
+<meta charset="UTF-8">
+<title>🎰 彩票摇号（8选4）</title>
+
 <style>
 body{
-  background:radial-gradient(circle,#111,#000);
-  color:#fff;
-  font-family:Arial;
-  text-align:center;
-}
-h1{margin-top:20px}
-.machine{
-  margin:40px auto;
-  width:520px;
-  padding:30px;
-  border-radius:40px;
-  background:linear-gradient(145deg,#eee,#bbb);
-  box-shadow:0 0 40px #000 inset;
-}
-.balls{
+  margin:0;
+  height:100vh;
   display:flex;
-  justify-content:space-between;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  background:radial-gradient(circle at top,#333,#000);
+  font-family:"Segoe UI",Arial;
+  color:#fff;
 }
+
+h1{
+  margin-bottom:30px;
+  letter-spacing:2px;
+}
+
+.machine{
+  background:linear-gradient(#eee,#bbb);
+  border-radius:80px;
+  padding:30px 40px;
+  display:flex;
+  gap:20px;
+  box-shadow:inset 0 8px 20px rgba(255,255,255,.7),
+             inset 0 -10px 25px rgba(0,0,0,.4),
+             0 20px 40px rgba(0,0,0,.8);
+}
+
 .ball{
   width:80px;
   height:80px;
   border-radius:50%;
-  background:radial-gradient(circle at 30% 30%,#fff,#ff3b3b);
-  color:#fff;
+  background:radial-gradient(circle at 30% 30%,#fff,#ff4b4b);
+  display:flex;
+  justify-content:center;
+  align-items:center;
   font-size:36px;
   font-weight:bold;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  box-shadow:0 0 20px rgba(255,0,0,.8);
-  animation:shake .1s infinite;
+  color:#fff;
+  box-shadow:inset 0 -6px 10px rgba(0,0,0,.4),
+             0 0 20px rgba(255,80,80,.8);
 }
-@keyframes shake{
-  0%{transform:translateY(0)}
-  50%{transform:translateY(-5px)}
-  100%{transform:translateY(0)}
-}
+
 button{
-  margin-top:30px;
-  padding:15px 50px;
+  margin-top:40px;
+  padding:16px 60px;
   font-size:20px;
   border:none;
-  border-radius:30px;
+  border-radius:40px;
   cursor:pointer;
-  background:linear-gradient(90deg,#ff0033,#ff9900);
+  background:linear-gradient(90deg,#ff1744,#ff9100);
   color:#fff;
+  font-weight:bold;
 }
-.result{
-  margin-top:20px;
-  font-size:22px;
+
+button:disabled{
+  opacity:.5;
 }
-.stop .ball{animation:none}
 </style>
 </head>
 
 <body>
+
 <h1>🎰 彩票摇号（8 选 4）</h1>
 
-<div class="machine" id="machine">
-  <div class="balls">
-    <div class="ball">?</div>
-    <div class="ball">?</div>
-    <div class="ball">?</div>
-    <div class="ball">?</div>
-  </div>
+<div class="machine">
+  <div class="ball">?</div>
+  <div class="ball">?</div>
+  <div class="ball">?</div>
+  <div class="ball">?</div>
 </div>
 
-<button onclick="start()">开始摇号</button>
-
-<div class="result" id="result"></div>
+<button id="btn" onclick="start()">开始摇号</button>
 
 <script>
-const balls = document.querySelectorAll('.ball')
-const machine = document.getElementById('machine')
-const result = document.getElementById('result')
+const balls = document.querySelectorAll(".ball")
+const btn = document.getElementById("btn")
 
 function start(){
-  result.innerHTML = ''
-  machine.classList.remove('stop')
+  btn.disabled = true
 
-  let timer = setInterval(()=>{
+  // 滚动动画
+  let rolling = setInterval(()=>{
     balls.forEach(b=>{
       b.innerText = Math.floor(Math.random()*8)+1
     })
   },80)
 
+  // 停止并开奖
   setTimeout(()=>{
-    clearInterval(timer)
-    machine.classList.add('stop')
+    clearInterval(rolling)
 
-    // 🎯 核心：8 个号码里随机抽 4 个（不重复）
     let pool = [1,2,3,4,5,6,7,8]
-    let win = []
+    let result = []
 
-    while(win.length < 4){
+    while(result.length < 4){
       let i = Math.floor(Math.random()*pool.length)
-      win.push(pool[i])
+      result.push(pool[i])
       pool.splice(i,1)
     }
 
-    balls.forEach((b,i)=>b.innerText = win[i])
-    result.innerHTML = `🎉 本轮号码：<b>${win.join(' , ')}</b>`
+    balls.forEach((b,i)=>{
+      b.innerText = result[i]
+    })
+
+    btn.disabled = false
   },2500)
 }
 </script>
+
 </body>
 </html>
