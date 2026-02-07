@@ -1,197 +1,109 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<title>彩票摇号系统</title>
-
+<meta charset="UTF-8" />
+<title>🎰 彩票摇号机</title>
 <style>
-body {
-  margin: 0;
-  background: radial-gradient(circle at top, #0f2027, #000);
-  font-family: Arial, sans-serif;
-  color: #fff;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+body{
+  background:radial-gradient(circle,#111,#000);
+  color:#fff;
+  font-family:Arial;
+  text-align:center;
 }
-
-.container {
-  width: 680px;
-  text-align: center;
+h1{margin-top:20px}
+.machine{
+  margin:40px auto;
+  width:520px;
+  padding:30px;
+  border-radius:40px;
+  background:linear-gradient(145deg,#eee,#bbb);
+  box-shadow:0 0 40px #000 inset;
 }
-
-h1 {
-  margin-bottom: 20px;
-  letter-spacing: 4px;
+.balls{
+  display:flex;
+  justify-content:space-between;
 }
-
-/* 🎱 摇奖机 */
-.machine {
-  width: 360px;
-  height: 360px;
-  margin: 0 auto;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6), rgba(255,255,255,0.15));
-  border: 10px solid rgba(255,255,255,0.45);
-  box-shadow: inset 0 0 50px rgba(0,0,0,0.85);
-  position: relative;
-  overflow: hidden;
+.ball{
+  width:80px;
+  height:80px;
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,#fff,#ff3b3b);
+  color:#fff;
+  font-size:36px;
+  font-weight:bold;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow:0 0 20px rgba(255,0,0,.8);
+  animation:shake .1s infinite;
 }
-
-/* 出球口 */
-.exit {
-  position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 90px;
-  height: 30px;
-  background: #000;
-  border-radius: 0 0 40px 40px;
+@keyframes shake{
+  0%{transform:translateY(0)}
+  50%{transform:translateY(-5px)}
+  100%{transform:translateY(0)}
 }
-
-/* 机器内滚动球 */
-.inner-ball {
-  position: absolute;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: radial-gradient(circle at top left, #fff, #ff5252);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  color: #000;
-  animation: float 0.6s infinite alternate;
+button{
+  margin-top:30px;
+  padding:15px 50px;
+  font-size:20px;
+  border:none;
+  border-radius:30px;
+  cursor:pointer;
+  background:linear-gradient(90deg,#ff0033,#ff9900);
+  color:#fff;
 }
-
-@keyframes float {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(220px, 220px); }
+.result{
+  margin-top:20px;
+  font-size:22px;
 }
-
-/* 🎱 掉落球 */
-.drop-ball {
-  position: absolute;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: radial-gradient(circle at top left, #fff, #ff1744);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  font-weight: bold;
-  color: #000;
-  animation: drop 0.9s ease-out forwards;
-}
-
-@keyframes drop {
-  0%   { top: 260px; opacity: 0; }
-  100% { top: 420px; opacity: 1; }
-}
-
-/* 结果区 */
-.results {
-  margin-top: 40px;
-  display: flex;
-  justify-content: center;
-  gap: 18px;
-}
-
-.result-slot {
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  font-weight: bold;
-}
-button {
-  margin-top: 30px;
-  padding: 14px 36px;
-  font-size: 18px;
-  font-weight: bold;
-  border-radius: 30px;
-  border: none;
-  cursor: pointer;
-  background: linear-gradient(90deg, #ff1744, #ff9100);
-  color: #fff;
-}
+.stop .ball{animation:none}
 </style>
 </head>
 
 <body>
-<div class="container">
-  <h1>🎱 彩票摇号</h1>
+<h1>🎰 彩票摇号（8 选 4）</h1>
 
-  <div class="machine" id="machine">
-    <div class="exit"></div>
+<div class="machine" id="machine">
+  <div class="balls">
+    <div class="ball">?</div>
+    <div class="ball">?</div>
+    <div class="ball">?</div>
+    <div class="ball">?</div>
   </div>
-
-  <div class="results" id="results">
-    <div class="result-slot"></div>
-    <div class="result-slot"></div>
-    <div class="result-slot"></div>
-    <div class="result-slot"></div>
-  </div>
-
-  <button onclick="startDraw()">开始摇号</button>
 </div>
 
+<button onclick="start()">开始摇号</button>
+
+<div class="result" id="result"></div>
+
 <script>
-/* =============================
-   🎯 规则：8 选 4（不重复）
-   ============================= */
-const NUMBER_POOL = [1,2,3,4,5,6,7,8];
-const DRAW_COUNT = 4;
+const balls = document.querySelectorAll('.ball')
+const machine = document.getElementById('machine')
+const result = document.getElementById('result')
 
-function startDraw() {
-  const machine = document.getElementById("machine");
-  const results = document.querySelectorAll(".result-slot");
+function start(){
+  result.innerHTML = ''
+  machine.classList.remove('stop')
 
-  // 清空
-  machine.querySelectorAll(".inner-ball, .drop-ball").forEach(b => b.remove());
-  results.forEach(r => r.innerText = "");
+  let timer = setInterval(()=>{
+    balls.forEach(b=>{
+      b.innerText = Math.floor(Math.random()*8)+1
+    })
+  },80)
 
-  /* 机器内滚动球（纯动画） */
-  for (let i = 0; i < 14; i++) {
-    const ball = document.createElement("div");
-    ball.className = "inner-ball";
-    ball.innerText = NUMBER_POOL[Math.floor(Math.random() * NUMBER_POOL.length)];
-    ball.style.top = Math.random() * 260 + "px";
-    ball.style.left = Math.random() * 260 + "px";
-    machine.appendChild(ball);
-  }
+  setTimeout(()=>{
+    clearInterval(timer)
+    machine.classList.add('stop')
 
-  /* 🎰 真正摇号（不重复） */
-  let pool = [...NUMBER_POOL];
-  let winners = [];
+    // 🎯 核心：8 个号码里随机抽 4 个（不重复）
+    let pool = [1,2,3,4,5,6,7,8]
+    let win = []
 
-  while (winners.length < DRAW_COUNT) {
-    const idx = Math.floor(Math.random() * pool.length);
-    winners.push(pool[idx]);
-    pool.splice(idx, 1);
-  }
+    while(win.length < 4){
+      let i = Math.floor(Math.random()*pool.length)
+      win.push(pool[i])
+      pool.splice(i,1)
+    }
 
-  /* 🎱 一个一个掉出来 */
-  winners.forEach((num, i) => {
-    setTimeout(() => {
-      const dropBall = document.createElement("div");
-      dropBall.className = "drop-ball";
-      dropBall.innerText = num;
-      dropBall.style.left = "156px"; // 出球口正中
-      machine.appendChild(dropBall);
-
-      results[i].innerText = num;
-    }, (i + 1) * 1200);
-  });
-}
-</script>
-</body>
-</html>
+    balls.forEach((b,i)=>b.innerText = win[i])
+    result.innerHTML = `🎉 本轮号码：<b>${win.join(' , ')}
