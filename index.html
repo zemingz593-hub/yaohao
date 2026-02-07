@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>年会抽奖系统</title>
+<title>年会抽奖系统（一次中四个）</title>
 
 <style>
 body {
@@ -17,7 +17,7 @@ body {
 }
 
 .container {
-  width: 520px;
+  width: 560px;
   background: linear-gradient(180deg, #1c313a, #000);
   border-radius: 18px;
   padding: 30px;
@@ -61,21 +61,19 @@ button {
   color: #fff;
 }
 
-.start:disabled {
-  opacity: 0.4;
-}
+.start:disabled { opacity: 0.4; }
 
 .reset {
   background: #263238;
   color: #ccc;
 }
 
-/* 🎰 彩票机 */
+/* 🎰 彩票机主体 */
 .machine {
   margin: 25px auto;
-  width: 200px;
+  width: 360px;
   height: 200px;
-  border-radius: 50%;
+  border-radius: 120px;
   background: radial-gradient(circle at 30% 30%, #ffffff, #90a4ae);
   box-shadow:
     inset -15px -15px 30px rgba(0,0,0,0.4),
@@ -83,26 +81,26 @@ button {
     0 25px 50px rgba(0,0,0,0.8);
   display: flex;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  justify-content: space-around;
 }
 
-/* 转轴窗口 */
+/* 窗口 */
 .window {
-  width: 120px;
-  height: 50px;
+  width: 70px;
+  height: 60px;
   background: #000;
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
   box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .reel {
-  text-align: center;
-  font-size: 28px;
+  font-size: 22px;
   font-weight: bold;
   color: #ff5252;
-  line-height: 50px;
 }
 
 .spin {
@@ -111,7 +109,7 @@ button {
 
 @keyframes spin {
   0%   { transform: translateY(0); }
-  100% { transform: translateY(-50px); }
+  100% { transform: translateY(-20px); }
 }
 
 .result {
@@ -146,21 +144,19 @@ button {
   <label>参与名单（每行一个）</label>
   <textarea id="list" rows="4"></textarea>
 
-  <label>抽取人数</label>
-  <input type="number" id="count" value="1" min="1">
-
   <label>
-    <input type="checkbox" id="repeat"> 允许重复中奖
+    <input type="checkbox" id="repeat" checked> 允许重复中奖
   </label>
 
   <button class="start" id="startBtn" onclick="draw()" disabled>开始抽奖</button>
   <button class="reset" id="resetBtn" onclick="reset()" disabled>重置</button>
 
-  <!-- 🎰 彩票机 -->
+  <!-- 🎰 四窗口彩票机 -->
   <div class="machine">
-    <div class="window">
-      <div class="reel" id="reel">---</div>
-    </div>
+    <div class="window"><div class="reel" id="reel1">---</div></div>
+    <div class="window"><div class="reel" id="reel2">---</div></div>
+    <div class="window"><div class="reel" id="reel3">---</div></div>
+    <div class="window"><div class="reel" id="reel4">---</div></div>
   </div>
 
   <div class="result" id="result"></div>
@@ -173,7 +169,7 @@ button {
 </div>
 
 <script>
-const ADMIN_PASSWORD = "123"; // 改密码
+const ADMIN_PASSWORD = "123"; // ← 改这里
 let history = [];
 
 function unlock() {
@@ -182,60 +178,68 @@ function unlock() {
     resetBtn.disabled = false;
     lockTip.innerText = "✅ 管理员已解锁";
     lockTip.style.color = "#00e676";
-  } else alert("密码错误");
+  } else {
+    alert("管理员密码错误");
+  }
 }
 
 function draw() {
   const names = list.value.split("\n").map(n => n.trim()).filter(n => n);
-  const count = +document.getElementById("count").value;
   const repeat = document.getElementById("repeat").checked;
 
   if (!names.length) return alert("请输入名单");
 
   let pool = repeat ? [...names] : names.filter(n => !history.includes(n));
-  if (pool.length < count) return alert("人数不足");
+  if (!pool.length) return alert("人数不足");
 
   result.innerHTML = "";
-  drawOne(pool, count, repeat);
+  drawOnePersonFour(pool, repeat);
 }
 
-function drawOne(pool, left, repeat) {
-  if (left <= 0) return;
+function drawOnePersonFour(pool, repeat) {
+  const reels = [
+    document.getElementById("reel1"),
+    document.getElementById("reel2"),
+    document.getElementById("reel3"),
+    document.getElementById("reel4")
+  ];
 
-  reel.classList.add("spin");
-  let speed = 80;
+  // 开始滚动
+  reels.forEach(r => r.classList.add("spin"));
+
   let times = 0;
-
-  let rolling = setInterval(() => {
-    reel.innerText = pool[Math.floor(Math.random() * pool.length)];
+  const rolling = setInterval(() => {
+    const temp = pool[Math.floor(Math.random() * pool.length)];
+    reels.forEach(r => r.innerText = temp);
     times++;
 
     if (times > 30) {
       clearInterval(rolling);
-      reel.classList.remove("spin");
+      reels.forEach(r => r.classList.remove("spin"));
 
+      // 🎯 只抽一个人
       const idx = Math.floor(Math.random() * pool.length);
       const winner = pool[idx];
 
-      reel.innerText = winner;
-      result.innerHTML += "🎉 " + winner + "<br>";
+      // 四个窗口全是他
+      reels.forEach(r => r.innerText = winner);
 
-      if (!repeat) {
-        history.push(winner);
-        pool.splice(idx, 1);
-      }
+      result.innerHTML =
+        "🎉 本轮中奖者 🎉<br>" +
+        winner + "<br>" +
+        "（一次中 4 个）";
 
-      setTimeout(() => {
-        drawOne(pool, left - 1, repeat);
-      }, 1000);
+      if (!repeat) history.push(winner);
     }
-  }, speed);
+  }, 80);
 }
 
 function reset() {
   history = [];
-  reel.innerText = "---";
   result.innerHTML = "";
+  ["reel1","reel2","reel3","reel4"].forEach(id => {
+    document.getElementById(id).innerText = "---";
+  });
 }
 </script>
 </body>
