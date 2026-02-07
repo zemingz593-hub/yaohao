@@ -69,13 +69,44 @@ button {
   background: #e0e0e0;
 }
 
+.ball-box {
+  display: flex;
+  justify-content: center;
+  margin: 25px 0;
+}
+
+.ball {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #ffffff, #cfd8dc);
+  box-shadow:
+    inset -10px -10px 20px rgba(0,0,0,0.2),
+    inset 10px 10px 20px rgba(255,255,255,0.6),
+    0 15px 30px rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: bold;
+  color: #d32f2f;
+}
+
+@keyframes shake {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(5deg); }
+  50% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+  100% { transform: rotate(0deg); }
+}
+
 .result {
-  margin-top: 20px;
-  padding: 20px;
+  margin-top: 10px;
+  padding: 15px;
   background: #f4f6f8;
   border-radius: 10px;
   text-align: center;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: bold;
   color: #d32f2f;
   min-height: 40px;
@@ -114,6 +145,10 @@ button {
   <button class="start" id="startBtn" onclick="draw()" disabled>开始摇号</button>
   <button class="reset" id="resetBtn" onclick="reset()" disabled>重置</button>
 
+  <div class="ball-box">
+    <div class="ball" id="ball">🎲</div>
+  </div>
+
   <div class="result" id="result"></div>
 
   <div class="admin">
@@ -124,9 +159,8 @@ button {
 </div>
 
 <script>
-const ADMIN_PASSWORD = "123"; // ← 你在这里改密码
+const ADMIN_PASSWORD = "123"; // ← 改这里
 let history = [];
-let rollingTimer = null;
 
 function unlock() {
   const pwd = document.getElementById("adminPwd").value;
@@ -149,39 +183,50 @@ function draw() {
 
   if (!names.length) return alert("请输入名单");
 
-  let pool = repeat ? names : names.filter(n => !history.includes(n));
+  let pool = repeat ? [...names] : names.filter(n => !history.includes(n));
   if (pool.length < count) return alert("人数不足");
 
-  // 🎲 滚动动画
-  let rollCount = 0;
-  rollingTimer = setInterval(() => {
-    const temp = pool[Math.floor(Math.random() * pool.length)];
-    document.getElementById("result").innerText = temp;
-    rollCount++;
-    if (rollCount > 25) {
-      clearInterval(rollingTimer);
-      showResult(pool, count, repeat);
-    }
-  }, 100);
+  document.getElementById("result").innerHTML = "";
+  drawOne(pool, count, repeat);
 }
 
-function showResult(pool, count, repeat) {
-  let res = [];
-  for (let i = 0; i < count; i++) {
-    let idx = Math.floor(Math.random() * pool.length);
-    res.push(pool[idx]);
-    if (!repeat) {
-      history.push(pool[idx]);
-      pool.splice(idx, 1);
+function drawOne(pool, remaining, repeat) {
+  if (remaining <= 0) return;
+
+  const ball = document.getElementById("ball");
+  ball.style.animation = "shake 0.3s infinite";
+
+  let times = 0;
+  let rolling = setInterval(() => {
+    ball.innerText = pool[Math.floor(Math.random() * pool.length)];
+    times++;
+
+    if (times > 25) {
+      clearInterval(rolling);
+      ball.style.animation = "none";
+
+      const idx = Math.floor(Math.random() * pool.length);
+      const winner = pool[idx];
+
+      ball.innerText = winner;
+      document.getElementById("result").innerHTML += "🎉 " + winner + "<br>";
+
+      if (!repeat) {
+        history.push(winner);
+        pool.splice(idx, 1);
+      }
+
+      setTimeout(() => {
+        drawOne(pool, remaining - 1, repeat);
+      }, 800);
     }
-  }
-  document.getElementById("result").innerHTML =
-    "🎉 开奖结果 🎉<br>" + res.join("<br>");
+  }, 100);
 }
 
 function reset() {
   history = [];
   document.getElementById("result").innerHTML = "";
+  document.getElementById("ball").innerText = "🎲";
 }
 </script>
 </body>
