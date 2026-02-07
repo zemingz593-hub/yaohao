@@ -1,38 +1,144 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <title>网页在线摇号</title>
-  <style>
-    body { font-family: Arial; background:#f2f2f2; padding:30px }
-    textarea, input, button {
-      width:100%; margin-top:10px; padding:10px; font-size:14px;
-    }
-    button { background:#4CAF50; color:#fff; border:none; cursor:pointer }
-    .result { margin-top:20px; font-size:18px; color:#d32f2f }
-  </style>
+<meta charset="UTF-8">
+<title>专业在线摇号系统</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.container {
+  background: #fff;
+  width: 460px;
+  border-radius: 14px;
+  padding: 30px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+h2 {
+  text-align: center;
+  color: #203a43;
+  margin-top: 0;
+}
+
+label {
+  display: block;
+  margin-top: 15px;
+  font-weight: 600;
+}
+
+textarea, input {
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+button {
+  width: 100%;
+  margin-top: 15px;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.start {
+  background: #1e88e5;
+  color: #fff;
+}
+
+.start:disabled {
+  background: #90caf9;
+  cursor: not-allowed;
+}
+
+.reset {
+  background: #e0e0e0;
+}
+
+.result {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f4f6f8;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: bold;
+  color: #d32f2f;
+  min-height: 40px;
+}
+
+.admin {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px dashed #ccc;
+}
+
+.lock {
+  color: #d32f2f;
+  font-weight: bold;
+  text-align: center;
+}
+</style>
 </head>
+
 <body>
+<div class="container">
+  <h2>🎲 在线摇号系统</h2>
 
-<h2>网页在线摇号</h2>
+  <div id="lockTip" class="lock">🔒 管理员未解锁</div>
 
-<label>参与名单（每行一个）：</label>
-<textarea id="list" rows="6"></textarea>
+  <label>参与名单（每行一个）</label>
+  <textarea id="list" rows="5"></textarea>
 
-<label>抽取人数：</label>
-<input type="number" id="count" value="1" min="1">
+  <label>抽取人数</label>
+  <input type="number" id="count" value="1" min="1">
 
-<label>
-  <input type="checkbox" id="repeat"> 允许重复中奖
-</label>
+  <label>
+    <input type="checkbox" id="repeat"> 允许重复中奖
+  </label>
 
-<button onclick="draw()">开始摇号</button>
-<button onclick="reset()">重置</button>
+  <button class="start" id="startBtn" onclick="draw()" disabled>开始摇号</button>
+  <button class="reset" id="resetBtn" onclick="reset()" disabled>重置</button>
 
-<div class="result" id="result"></div>
+  <div class="result" id="result"></div>
+
+  <div class="admin">
+    <label>管理员密码</label>
+    <input type="password" id="adminPwd" placeholder="请输入管理员密码">
+    <button onclick="unlock()">解锁管理员</button>
+  </div>
+</div>
 
 <script>
+const ADMIN_PASSWORD = "123456"; // ← 你在这里改密码
 let history = [];
+let rollingTimer = null;
+
+function unlock() {
+  const pwd = document.getElementById("adminPwd").value;
+  if (pwd === ADMIN_PASSWORD) {
+    document.getElementById("startBtn").disabled = false;
+    document.getElementById("resetBtn").disabled = false;
+    document.getElementById("lockTip").innerText = "✅ 管理员已解锁";
+    document.getElementById("lockTip").style.color = "#2e7d32";
+  } else {
+    alert("管理员密码错误");
+  }
+}
 
 function draw() {
   const names = document.getElementById("list").value
@@ -46,18 +152,31 @@ function draw() {
   let pool = repeat ? names : names.filter(n => !history.includes(n));
   if (pool.length < count) return alert("人数不足");
 
+  // 🎲 滚动动画
+  let rollCount = 0;
+  rollingTimer = setInterval(() => {
+    const temp = pool[Math.floor(Math.random() * pool.length)];
+    document.getElementById("result").innerText = temp;
+    rollCount++;
+    if (rollCount > 25) {
+      clearInterval(rollingTimer);
+      showResult(pool, count, repeat);
+    }
+  }, 100);
+}
+
+function showResult(pool, count, repeat) {
   let res = [];
   for (let i = 0; i < count; i++) {
     let idx = Math.floor(Math.random() * pool.length);
     res.push(pool[idx]);
     if (!repeat) {
       history.push(pool[idx]);
-      pool.splice(idx,1);
+      pool.splice(idx, 1);
     }
   }
-
   document.getElementById("result").innerHTML =
-    "摇号结果：<br>" + res.join("<br>");
+    "🎉 开奖结果 🎉<br>" + res.join("<br>");
 }
 
 function reset() {
@@ -65,6 +184,5 @@ function reset() {
   document.getElementById("result").innerHTML = "";
 }
 </script>
-
 </body>
 </html>
